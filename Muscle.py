@@ -139,55 +139,84 @@ else:
         st.markdown("### ⏱️ 週期進度與轉換雷達")
         if not df.empty and 'Phase' in df.columns:
             df_chronological = df.sort_values('Date', ascending=True).reset_index(drop=True)
+            
+            # 1. 計算「週期 (Phase)」進度
             df_chronological['Phase_Change'] = df_chronological['Phase'] != df_chronological['Phase'].shift(1)
             last_change_idx = df_chronological[df_chronological['Phase_Change']].index[-1] if not df_chronological[df_chronological['Phase_Change']].empty else 0
-            
             current_phase_df = df_chronological.iloc[last_change_idx:]
             phase_start_date = current_phase_df['Date'].min()
             last_log_date = current_phase_df['Date'].max()
-            
-            days_in_phase = (last_log_date - phase_start_date).days
-            weeks_in_phase = (days_in_phase // 7) + 1
+            weeks_in_phase = ((last_log_date - phase_start_date).days // 7) + 1
             
             col_p1, col_p2 = st.columns([1.5, 3])
             with col_p1:
-                st.metric(label="📊 當前執行週期進度", value=f"{current_phase.split(' ')[0]}", delta=f"🚀 進入第 {weeks_in_phase} 週", delta_color="normal")
+                st.metric(label="📊 當前執行週期", value=f"{current_phase.split(' ')[0]}", delta=f"🚀 進入第 {weeks_in_phase} 週", delta_color="normal")
             
             with col_p2:
                 advice_msg = ""
                 phase_name = current_phase.split(' ')[0]
-                
                 if "適應" in phase_name:
-                    if weeks_in_phase >= 4:
-                        advice_msg = "⚠️ <b>適應期已達上限：</b> 你的肌腱與神經應該已完全適應當前動作。為了避免停滯，強烈建議下週切換至 <b>「肌肥大期」</b> 增加肌肉量！"
-                    else:
-                        advice_msg = "💡 <b>穩紮穩打：</b> 目前適應期進度良好。請專注於「動作控制與肌肉感受度」，先不要急著加重，為未來的爆發打好地基。"
+                    if weeks_in_phase >= 4: advice_msg = "⚠️ <b>適應期已達上限：</b> 強烈建議下週切換至 <b>「肌肥大期」</b> 增加肌肉量！"
+                    else: advice_msg = "💡 <b>穩紮穩打：</b> 目前適應期進度良好。專注於動作控制與肌肉感受度。"
                 elif "肌肥大" in phase_name:
-                    if weeks_in_phase >= 6:
-                        advice_msg = "⚠️ <b>肌肥大期即稍微收尾：</b> 超過 6 週的高容量訓練極易產生代謝疲勞。若感覺進步停滯，建議下週切換至 <b>「最大肌力期」</b>，用大重量將剛長出的肌肉轉化為真實力量！"
-                    else:
-                        advice_msg = "💡 <b>持續榨乾肌肉：</b> 目前正處於肌肥大的黃金成長期！請繼續保持高容量 (Volume) 訓練，並確保做到力竭邊緣 (RPE 8-9)。"
+                    if weeks_in_phase >= 6: advice_msg = "⚠️ <b>肌肥大期收尾：</b> 建議下週切換至 <b>「最大肌力期」</b>，將剛長出的肌肉轉化為真實力量！"
+                    else: advice_msg = "💡 <b>持續榨乾：</b> 正處於肌肥大黃金期！請繼續保持高容量 (Volume)。"
                 elif "最大肌力" in phase_name:
-                    if weeks_in_phase >= 4:
-                        advice_msg = "🚨 <b>神經疲勞警戒區：</b> 最大肌力期超過 4 週會對中樞神經(CNS)造成極大壓力。建議下週立刻安排 1 週的 <b>「減量期 (Deload)」</b>，或準備進行 <b>「PR 測試」</b>！"
-                    else:
-                        advice_msg = "💡 <b>挑戰極限：</b> 這是發展絕對力量的關鍵期！請確保組間休息時間充足 (3-5分鐘)，專注神經徵召，勇敢推起大重量。"
+                    if weeks_in_phase >= 4: advice_msg = "🚨 <b>神經疲勞警戒區：</b> 建議下週立刻安排 1 週的 <b>「減量期 (Deload)」</b>，或準備進行 <b>「PR 測試」</b>！"
+                    else: advice_msg = "💡 <b>挑戰極限：</b> 這是發展絕對力量的關鍵期！勇敢推起大重量。"
                 elif "減量" in phase_name:
-                    if weeks_in_phase > 1:
-                        advice_msg = "⚠️ <b>減量過度警告：</b> 減量期通常只需 1 週。疲勞已經消退，再不增加強度會開始流失體能！建議下週立刻進入新的 <b>「適應期」或「肌肥大期」</b>。"
-                    else:
-                        advice_msg = "💡 <b>積極恢復中：</b> 本週請將總容量砍半，重量維持在平常的 70-80% 左右。讓身體好好超補償，下週準備迎接更強的自己！"
-                elif "PR" in phase_name:
-                    advice_msg = "🏆 <b>享受成果：</b> 測完 PR 後，神經與關節會非常疲勞。下週請務必直接進入 <b>「減量期 (Deload)」</b>，或是重新啟動新的 <b>「適應期」</b>。"
+                    if weeks_in_phase > 1: advice_msg = "⚠️ <b>減量過度警告：</b> 疲勞已消退，建議下週立刻進入新的 <b>「適應期」或「肌肥大期」</b>。"
+                    else: advice_msg = "💡 <b>積極恢復中：</b> 讓身體好好超補償，下週準備迎接更強的自己！"
                 else:
-                    advice_msg = "💡 <b>資料累積中：</b> 請持續穩定紀錄你的訓練數據。"
+                    advice_msg = "🏆 <b>測驗完畢：</b> 下週請務必進入 <b>「減量期 (Deload)」</b> 恢復神經。"
                 
-                if "⚠️" in advice_msg or "🚨" in advice_msg:
-                    st.markdown(f"""<div class="alert-card">{advice_msg}</div>""", unsafe_allow_html=True)
-                elif "🏆" in advice_msg:
-                    st.markdown(f"""<div class="gold-card">{advice_msg}</div>""", unsafe_allow_html=True)
-                else:
-                    st.markdown(f"""<div class="coach-card">{advice_msg}</div>""", unsafe_allow_html=True)
+                if "⚠️" in advice_msg or "🚨" in advice_msg: st.markdown(f"""<div class="alert-card">{advice_msg}</div>""", unsafe_allow_html=True)
+                elif "🏆" in advice_msg: st.markdown(f"""<div class="gold-card">{advice_msg}</div>""", unsafe_allow_html=True)
+                else: st.markdown(f"""<div class="coach-card">{advice_msg}</div>""", unsafe_allow_html=True)
+
+            st.markdown("---")
+
+            # 🟢 2. 全新計算「強度 (% 1RM)」進度
+            st.markdown("### 📈 強度漸進追蹤雷達 (Intensity Progression)")
+            
+            # 過濾出有紀錄 % 數的數據
+            df_int = df_chronological[df_chronological['Intensity_Pct'] > 0].reset_index(drop=True)
+            
+            if not df_int.empty:
+                latest_intensity = df_int.iloc[-1]['Intensity_Pct']
+                start_date_int = df_int.iloc[-1]['Date']
+                
+                # 往回推算，找出「連續維持在這個強度區間 (+/- 2.5%)」的起點
+                for i in range(len(df_int)-2, -1, -1):
+                    if abs(df_int.iloc[i]['Intensity_Pct'] - latest_intensity) <= 2.5:
+                        start_date_int = df_int.iloc[i]['Date']
+                    else:
+                        break
+                
+                days_at_intensity = (df_int.iloc[-1]['Date'] - start_date_int).days
+                weeks_at_intensity = (days_at_intensity // 7) + 1
+                
+                col_i1, col_i2 = st.columns([1.5, 3])
+                with col_i1:
+                    st.metric(label="🎯 當前訓練強度", value=f"{latest_intensity}% 1RM", delta=f"🔥 維持第 {weeks_at_intensity} 週", delta_color="normal")
+                
+                with col_i2:
+                    int_msg = ""
+                    if weeks_at_intensity == 1:
+                        int_msg = f"💡 <b>建立適應：</b> 你剛進入 {latest_intensity}% 的強度區間。本週請專注於「離心控制」與「推起速度」，先讓神經系統適應重量。"
+                    elif weeks_at_intensity == 2:
+                        int_msg = f"🟢 <b>發力甜蜜點：</b> 這是發展目前強度的黃金週。觀察近期的 RPE (疲勞度)，如果覺得游刃有餘，可以為下週加重做準備！"
+                    elif weeks_at_intensity == 3:
+                        int_msg = f"⚠️ <b>加重提示窗：</b> 你在這個強度已經練滿 3 週，身體差不多完全適應了。<b>強烈建議在下一次訓練加上 2.5% ~ 5% 的強度</b>，推動漸進性超負荷！"
+                    else:
+                        int_msg = f"🚨 <b>停滯警告 (Plateau)：</b> 你停留在 {latest_intensity}% 已經達到 {weeks_at_intensity} 週！這會讓身體失去成長刺激。請立刻增加重量，或進入減量期休息後再重新堆疊。"
+
+                    if "🚨" in int_msg or "⚠️" in int_msg:
+                        st.markdown(f"""<div class="alert-card">{int_msg}</div>""", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"""<div class="coach-card">{int_msg}</div>""", unsafe_allow_html=True)
+            else:
+                st.info("尚無包含「目標強度 (% 1RM)」的數據可供分析。")
 
         st.markdown("---")
         st.markdown("### 🔍 近期單次訓練狀態分析")
@@ -212,7 +241,7 @@ else:
             else:
                 st.markdown(f"""<div class="coach-card"><b>🎯 課表執行精準</b><br>最新一筆的訓練強度 ({intensity_pct}% 1RM) 與次數 ({reps} 下) 非常符合 <b>{phase.split(" ")[0]}</b> 的課表設計，請繼續保持這個紀律！</div>""", unsafe_allow_html=True)
 
-    # ----------------- 🟢 TAB 2: 全新 ACWR 疲勞監控 -----------------
+    # ----------------- 🟢 TAB 2: ACWR 疲勞監控 -----------------
     with tab2:
         st.markdown("### ⚖️ ACWR 急慢性負荷比 (傷病預警系統)")
         st.markdown("職業運動普遍採用的黃金指標。不盲目要求休息，而是看你**「本週的訓練量 (急性)」**相較於**「過去四周打下的底子 (慢性)」**是否暴增。只要循序漸進，你的負荷可以無限疊加！")
@@ -283,7 +312,6 @@ else:
         
         with col_chart1:
             if 'Exercise' in df.columns:
-                # 🟢 只抓取備註欄位含有 [主項] 標籤的動作
                 if 'Notes' in df.columns:
                     main_exercises = df[df['Notes'].astype(str).str.contains(r'\[主項\]', regex=True, na=False)]['Exercise'].dropna().unique()
                 else:
